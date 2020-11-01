@@ -24,14 +24,8 @@ class Product(models.Model):
 
 		# *******Customer******
 class Customer(models.Model):
-	GENDER = (
-		("F", "Female"),
-		("M", "Male")
-	)
 	user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customer')
 	phone = models.PositiveIntegerField(null=True)
-	gender = models.CharField(choices=GENDER, max_length=1, null=True)
-	age = models.PositiveIntegerField(null=True)
 	image = models.ImageField(null=True)
 	address=models.TextField()
 
@@ -42,14 +36,24 @@ class Customer(models.Model):
 
 		# *******Order******
 class Order(models.Model):
+	product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='products')
+	quantity = models.PositiveIntegerField()
+
+	def __str__(self):
+		return f"{self.product.name}: ({self.quantity})"
+
+
+
+		# *******OrderHistory******
+class OrderHistory(models.Model):
 	customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='orders')
 	date_time = models.DateTimeField(auto_now_add=True)
 	total = models.DecimalField(max_digits=10, decimal_places=4)
+	order= models.ManyToManyField(Order, related_name='ordersSSS')
 
 
 
 		# *******Order******
 class Cart(models.Model):
-	product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='products')
-	quantity = models.PositiveIntegerField()
-	order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='carts')
+	order= models.ManyToManyField(Order, related_name='orderfffsC')
+	customer = models.OneToOneField(Customer, on_delete=models.CASCADE, related_name='ordersC')
