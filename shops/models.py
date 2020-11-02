@@ -33,6 +33,16 @@ class Customer(models.Model):
 		return self.user.username
 
 
+class Order(models.Model):
+	customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='orders')
+	date_time = models.DateTimeField(auto_now_add=True)
+	isPaied=models.BooleanField(default=False)
+	total = models.DecimalField(max_digits=10, decimal_places=4)
+
+	def __str__(self):
+		return f"{self.customer.user.username}'s order"
+
+
 class OrderItem(models.Model):
 	product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='order_items')
 	quantity = models.PositiveIntegerField()
@@ -40,14 +50,3 @@ class OrderItem(models.Model):
 
 	def __str__(self):
 		return f"{self.product.name}: ({self.quantity})"
-
-
-class Order(models.Model):
-	customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='orders')
-	date_time = models.DateTimeField(auto_now_add=True)
-	# status = 
-	total = models.DecimalField(max_digits=10, decimal_places=4)
-
-	def __str__(self):
-		return f"{self.customer.user.username}'s order"
-
