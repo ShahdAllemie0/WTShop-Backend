@@ -49,6 +49,8 @@ class Address(models.Model):
 	city = models.CharField(max_length=50)
 	street = models.CharField(max_length=200)
 	profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='addresses')
+	def __str__(self):
+		return f"{self.profile.user.username}: {self.country}-- {self.city}"
 
 
 
@@ -57,7 +59,7 @@ class Order(models.Model):
 	address =models.ForeignKey(Address, on_delete=models.CASCADE, related_name='address')
 	customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
 	date_time = models.DateTimeField(auto_now_add=True)
-	total = models.DecimalField(max_digits=8, decimal_places=3)
+	total = models.DecimalField(max_digits=6, decimal_places=2)
 
 	def __str__ (self):
 		return ("Order uuid: " + self.uuid)
@@ -66,3 +68,6 @@ class Item(models.Model):
 	product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='products')
 	quantity = models.PositiveIntegerField()
 	order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
+
+	def __str__(self):
+		return f"{self.product.name}: ({self.quantity})"
