@@ -4,10 +4,11 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from shops import views
-
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/login/', views.UserLoginAPIView.as_view() , name='login'),
     path('api/signup/', views.SignUpAPIView.as_view(), name='api-register'),
     path('api/products/', views.ProductListView.as_view(), name='api-products'),
     path('api/orders/', views.OrderItems.as_view(), name='order-items'),
