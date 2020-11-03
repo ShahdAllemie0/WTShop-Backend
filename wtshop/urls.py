@@ -8,7 +8,10 @@ from shops import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/signup/', views.SignUpAPIView.as_view(), name='api-register'),
     path('api/products/', views.ProductListView.as_view(), name='api-products'),
+    path('api/orders/', views.OrderItems.as_view(), name='order-items'),
+     path('api/address/', views.AddressCreateAPIView.as_view(), name="api-address"),
     # path('api/products/<int:product_id>/', views.ProductDetails.as_view(), name='api-product-detail'),
 ]
 if settings.DEBUG:
