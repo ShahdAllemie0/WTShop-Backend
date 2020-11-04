@@ -57,7 +57,8 @@ class Address(models.Model):
 
 
 class Order(models.Model):
-	uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+	#uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+	uuid = models.CharField(max_length=10)
 	address =models.ForeignKey(Address, on_delete=models.CASCADE,blank=True,null=True, related_name='address')
 	customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
 	date_time = models.DateTimeField(auto_now_add=True)
