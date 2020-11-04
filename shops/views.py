@@ -38,24 +38,29 @@ class OrderItems(APIView):
 	serializer_class = OrderSerializer
 
 	def post(self, request):
+
 		order_obj ={}
 		item_obj={}
 		try:
 			order_obj = Order.objects.get(customer=self.request.user, isPaid=False)
 		except:
   			print("An exception occurred")
-
+		new_data = request.data
+		new_product = Product.objects.get(id=new_data['product_id'])
+		# total_new=order_obj.total
 		if not order_obj:
+
 			new_order ={
 				'uuid': str(uuid.uuid4())[0:8],
 				'customer':self.request.user,
-				'isPaid':False
+				'isPaid':False,
+				'total':(int(new_data['quantity'])*float(new_product.price))
 			}
 			order_obj= Order.objects.create(**new_order)
 			order_obj.save()
-		
-		new_data = request.data
-		new_product = Product.objects.get(id=new_data['product_id'])
+
+
+
 		try:
 			item_obj = Item.objects.get(product=new_product)
 		except:
@@ -63,15 +68,16 @@ class OrderItems(APIView):
 		if item_obj:
 			item_obj.quantity += int(new_data['quantity'])
 			item_obj.save()
+			order_obj.total=(int(new_data['quantity'])*float(new_product.price))+float(order_obj.total)
+			order_obj.save()
 		else:
+
+
 			new_item = {
 				'product': new_product,
 				'quantity': new_data['quantity'],
-				'order':order_obj
+				'order':order_obj,
 			}
 			item = Item.objects.create(**new_item)
 			item.save()
 		return Response(self.serializer_class(order_obj).data, status=HTTP_200_OK)
-
-
-
