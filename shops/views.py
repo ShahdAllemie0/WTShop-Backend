@@ -14,7 +14,7 @@ class SignUpAPIView(CreateAPIView):
 
 
 class ProductListView(ListAPIView):
-	queryset = Product.objects.all()
+	queryset = Product.objects.filter(stock__gte=1)
 	serializer_class = ProductSerializer
 	permission_classes = [AllowAny]
 
