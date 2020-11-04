@@ -32,10 +32,22 @@ class OrderItems(APIView):
 
 	def post(self, request):
 
-		order, created = Order.objects.get_or_create(customer=self.request.user, is_paid=False)
+		new_order, created = Order.objects.get_or_create(customer=self.request.user, is_paid=False)
+		new_product=Product.objects.get(id=request.data['product_id'])
+		item, added = Item.objects.get_or_create(product=new_product,order=new_order)
+		if item.product.stock>=int(request.data['quantity']):
+			if added:
+				item.quantity=request.data['quantity']
+				item.save()
+			else:
+				item.quantity=int(request.data['quantity'])+int(item.quantity)
+				item.save()
 
-		# Scenario 1, the item is already in the cart, increment quantity
-		# Scenario 2, the item is not in the cart, assign
-		# = Item.objects.get_or_create(product=, order=)
-
-		return Response(self.serializer_class(order_obj).data, status=HTTP_200_OK)
+			new_product.stock=int(item.product.stock)-int(request.data['quantity'])
+			# item.save()
+			new_product.save()
+			new_order.total=(int(request.data['quantity'])*float(item.product.price))+float(new_order.total)
+			new_order.save()
+			return Response(self.serializer_class(new_order).data, status=HTTP_200_OK)
+		else:
+			return Response(self.serializer_class().data, status=HTTP_400_BAD_REQUEST)

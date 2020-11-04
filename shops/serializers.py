@@ -55,7 +55,7 @@ class OrderSerializer(serializers.ModelSerializer):
         read_only=True,
         slug_field='username')
 		#total = serializers.SerializerMethodField()
-    
+
 	class Meta:
 		model = Order
-		fields = ['uuid', 'customer', 'address',  'items', 'date_time', 'total']
+		fields = [ 'customer', 'address',  'items', 'date_time', 'total']
