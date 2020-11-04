@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+import uuid
 
 class UserLoginAPIView(APIView):
 	serializer_class = UserLoginSerializer
@@ -33,40 +34,44 @@ class AddressCreateAPIView(CreateAPIView):
 	permission_classes = [AllowAny]
 
 
-
 class OrderItems(APIView):
-	# serializer_class = OrderSerializer
+	serializer_class = OrderSerializer
 
 	def post(self, request):
+		order_obj ={}
+		item_obj={}
+		try:
+			order_obj = Order.objects.get(customer=self.request.user, isPaid=False)
+		except:
+  			print("An exception occurred")
 
-		new_user=request.user
-		order = Order.objects.filter(customer = new_user )
-		if order:
-			cart=Order.objects.get(customer=new_user)
-		else:
-			cart=Order.objects.create(customer=new_user)
-		new_data=request.data
-		serializer=self.serializer_class(data=new_data)
-		if serializer.is_valid():
-			valid_data = serializer.data
-			new_data = {
-				'product': Product.objects.get(id=valid_data['product_id']),
-				'quantity': valid_data['quantity'],
-				'order':cart
+		if not order_obj:
+			new_order ={
+				'uuid': str(uuid.uuid4())[0:8],
+				'customer':self.request.user,
+				'isPaid':False
 			}
-			new_item = Item.objects.create(**new_data)
-		return Response(self.serializer_class(cart).data, status=HTTP_200_OK)
+			order_obj= Order.objects.create(**new_order)
+			order_obj.save()
+		
+		new_data = request.data
+		new_product = Product.objects.get(id=new_data['product_id'])
+		try:
+			item_obj = Item.objects.get(product=new_product)
+		except:
+  			print("An exception occurred")
+		if item_obj:
+			item_obj.quantity += int(new_data['quantity'])
+			item_obj.save()
+		else:
+			new_item = {
+				'product': new_product,
+				'quantity': new_data['quantity'],
+				'order':order_obj
+			}
+			item = Item.objects.create(**new_item)
+			item.save()
+		return Response(self.serializer_class(order_obj).data, status=HTTP_200_OK)
 
-		# total = 0
-
-		 # total
-		 #Address
-
-		# order
-		# order  = Order.objects.create(order_ref= new_uuid, customer = request.user, address= , total=)
-
-		 # item
-		# Item.objects.create(product_id=,quantity=,order=order)
 
 
-# class CreateOrder(CreateAPIView):
