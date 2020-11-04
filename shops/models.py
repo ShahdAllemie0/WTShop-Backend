@@ -51,6 +51,7 @@ class Address(models.Model):
 	city = models.CharField(max_length=50)
 	street = models.CharField(max_length=200)
 	profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='addresses')
+	
 	def __str__(self):
 		return f"{self.profile.user.username}: {self.country}-- {self.city}"
 
@@ -59,17 +60,18 @@ class Address(models.Model):
 class Order(models.Model):
 	#uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 	uuid = models.CharField(max_length=10)
-	address =models.ForeignKey(Address, on_delete=models.CASCADE,blank=True,null=True, related_name='address')
+	address =models.ForeignKey(Address, on_delete=models.CASCADE,blank=True,null=True, related_name='orders')
 	customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
 	date_time = models.DateTimeField(auto_now_add=True)
-	isPaid=models.BooleanField(default=False)
+	is_paid=models.BooleanField(default=False)
 	total = models.DecimalField(max_digits=6, decimal_places=2,blank=True,null=True)
 
 	def __str__ (self):
 		return ("Order uuid: " + self.uuid)
 
+
 class Item(models.Model):
-	product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='products')
+	product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='items')
 	quantity = models.PositiveIntegerField()
 	order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
 
