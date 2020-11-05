@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from rest_framework.generics import ListAPIView,CreateAPIView
+from rest_framework.generics import ListAPIView,CreateAPIView, RetrieveAPIView
 from .serializers import  (ProductSerializer,OrderSerializer,SignUpSerializer,AddressSerializer,ProfileSerializer,
   ItemSerializer)
 from .models import Product,Order,Item,Address,Profile
@@ -20,11 +20,19 @@ class ProductListView(ListAPIView):
 	serializer_class = ProductSerializer
 	permission_classes = [AllowAny]
 
-class CartView(ListAPIView):
+class OrderHistory(ListAPIView):
 	serializer_class = OrderSerializer
 	permission_classes = [IsAuthenticated]
 	def get_queryset(self):
-		return Order.objects.filter(customer=self.request.user)
+		return Order.objects.filter(customer=self.request.user, is_paid=True)
+
+
+class CartView(RetrieveAPIView):
+	serializer_class = OrderSerializer
+	permission_classes = [IsAuthenticated]
+	def get_object(self):
+		return Order.objects.get(customer=self.request.user, is_paid=False)
+
 
 class ProfileView(ListAPIView):
 	serializer_class = ProfileSerializer
@@ -69,23 +77,22 @@ class RemoveItems(APIView):
 	serializer_class = ItemSerializer
 
 	def post(self, request):
-		old_order= Order.objects.get(customer=self.request.user)
-		old_product=Product.objects.get(id=request.data['product_id'])
-		old_item = Item.objects.get(product=old_product,order=old_order)
-		if old_item:
-			old_product.stock=int(old_product.stock)+int(old_item.quantity)
-			old_product.save()
-			old_total=float(old_order.total)
-			subtotal=(int(old_item.quantity)*float(old_product.price))
-			if old_total>=subtotal:
-				old_order.total=old_total-subtotal
-				old_order.save()
-			else:
-				old_order.total=subtotal-old_total
-				old_order.save()
+		order = Order.objects.get(customer=self.request.user, is_paid=False)
+		product = Product.objects.get(id=request.data['product_id'])
+		try:
+			old_item = Item.objects.get(
+				product_id=request.data['product_id'],
+				order=order
+			)
+			
+			product.stock += old_item.quantity
+			product.save()
+			
+			order.total -= (old_item.quantity*product.price)
+			order.save()
 
 			old_item.delete()
-			return Response(self.serializer_class(old_item).data, status=HTTP_200_OK)
-		else:
-			return Response(self.serializer_class().data, status=HTTP_400_BAD_REQUEST)
+			return Response({}, status=HTTP_200_OK)
+		except:
+			return Response({}, status=HTTP_400_BAD_REQUEST)
 # c/gt4
