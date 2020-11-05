@@ -21,7 +21,6 @@ class ProductListView(ListAPIView):
 
 class ProfileView(ListAPIView):
 	serializer_class = ProfileSerializer
-	permission_classes = [AllowAny]
 	def get_queryset(self):
 		return Profile.objects.filter(user=self.request.user)
 
