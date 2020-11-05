@@ -35,7 +35,7 @@ class Profile(models.Model):
 	user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
 	phone = models.PositiveIntegerField(null=True)
 	gender = models.CharField(choices=GENDER, max_length=2, null=True)
-	image = models.ImageField(null=True)
+	image = models.ImageField(upload_to='profile_pic', default='profile.png')
 
 	def __str__(self):
 		return self.user.username

@@ -1,12 +1,13 @@
 from django.shortcuts import render
 from rest_framework.generics import ListAPIView,CreateAPIView
-from .serializers import  ProductSerializer,OrderSerializer,SignUpSerializer,AddressSerializer
-from .models import Product,Order,Item,Address
+from .serializers import  ProductSerializer,OrderSerializer,SignUpSerializer,AddressSerializer,ProfileSerializer
+from .models import Product,Order,Item,Address,Profile
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 import uuid
+
 
 
 class SignUpAPIView(CreateAPIView):
@@ -18,8 +19,14 @@ class ProductListView(ListAPIView):
 	serializer_class = ProductSerializer
 	permission_classes = [AllowAny]
 
+class ProfileView(ListAPIView):
+	serializer_class = ProfileSerializer
+	permission_classes = [AllowAny]
+	def get_queryset(self):
+		return Profile.objects.filter(user=self.request.user)
 
-class AddressCreateAPIView(CreateAPIView):
+
+class AddressCreateView(CreateAPIView):
 	serializer_class = AddressSerializer
 	permission_classes = [AllowAny]
 	# Permission needs to be set to IsAuthenticated

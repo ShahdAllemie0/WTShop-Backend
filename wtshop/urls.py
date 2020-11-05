@@ -12,7 +12,9 @@ urlpatterns = [
     path('signup/', views.SignUpAPIView.as_view(), name='register'),
     path('products/', views.ProductListView.as_view(), name='products'),
     path('orders/', views.OrderItems.as_view(), name='order-items'),
-    path('address/', views.AddressCreateAPIView.as_view(), name="address"),
+    path('address/', views.AddressCreateView.as_view(), name="address"),
+    path('profile/', views.ProfileView.as_view(), name="address"),
+
     # path('products/<int:product_id>/', views.ProductDetails.as_view(), name='product-detail'),
 ]
 if settings.DEBUG:
