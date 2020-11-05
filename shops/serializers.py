@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from .models import Product,Order,Item,Address
 from rest_framework_jwt.settings import api_settings
-
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -17,23 +17,18 @@ class SignUpSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = User
-		fields = ['username', 'password', 'token']
+		fields = ['username', 'email','first_name', 'last_name', 'password','token']
 
 	def create(self, validated_data):
-		username = validated_data['username']
-		password = validated_data['password']
-		new_user = User(username=username)
-		new_user.set_password(password)
+
+		new_user = User(**validated_data)
+		new_user.set_password(validated_data['password'])
 		new_user.save()
-
-		jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
-		jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
-
-		payload = jwt_payload_handler(new_user)
-		token = jwt_encode_handler(payload)
-
-		validated_data["token"] = token
+		token = RefreshToken.for_user(new_user)
+		validated_data["token"] = str(token.access_token)
 		return validated_data
+
+
 
 
 class AddressSerializer(serializers.ModelSerializer):
@@ -51,9 +46,9 @@ class ItemSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
 	items= ItemSerializer(many=True)
 	customer = serializers.SlugRelatedField(
-        many=False,  # it's by Default
-        read_only=True,
-        slug_field='username')
+		many=False,  # it's by Default
+		read_only=True,
+		slug_field='username')
 		#total = serializers.SerializerMethodField()
 
 	class Meta:
