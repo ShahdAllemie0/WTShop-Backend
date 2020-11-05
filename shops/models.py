@@ -66,8 +66,6 @@ class Order(models.Model):
 	is_paid=models.BooleanField(default=False)
 	total = models.DecimalField(max_digits=6, decimal_places=2,blank=True,null=True,default=0)
 
-	# def __str__ (self):
-	# 	return ("Order uuid: " + self.uuid)
 
 
 class Item(models.Model):

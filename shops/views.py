@@ -19,14 +19,14 @@ class ProductListView(ListAPIView):
 	queryset = Product.objects.filter(stock__gte=1)
 	serializer_class = ProductSerializer
 	permission_classes = [AllowAny]
+	
 
-# class ItemView(ListAPIView):
-# 	# queryset = Item.objects.all()
-# 	serializer_class = ItemSerializer
-# 	permission_classes = [IsAuthenticated]
-# 	def get_queryset(self):
-# 		order=Order.objects.filter(customer=self.request.user)
-# 		return Item.objects.filter(order=order)
+class CartView(ListAPIView):
+	serializer_class = OrderSerializer
+	permission_classes = [IsAuthenticated]
+	def get_queryset(self):
+		return Order.objects.filter(customer=self.request.user)
+
 
 class ProfileView(ListAPIView):
 	serializer_class = ProfileSerializer
