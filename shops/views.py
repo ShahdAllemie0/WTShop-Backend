@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from rest_framework.generics import ListAPIView,CreateAPIView
-from .serializers import  ProductSerializer,OrderSerializer,SignUpSerializer,AddressSerializer,ProfileSerializer
+from .serializers import  (ProductSerializer,OrderSerializer,SignUpSerializer,AddressSerializer,ProfileSerializer,
+  ItemSerializer)
 from .models import Product,Order,Item,Address,Profile
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
@@ -19,6 +20,14 @@ class ProductListView(ListAPIView):
 	serializer_class = ProductSerializer
 	permission_classes = [AllowAny]
 
+# class ItemView(ListAPIView):
+# 	# queryset = Item.objects.all()
+# 	serializer_class = ItemSerializer
+# 	permission_classes = [IsAuthenticated]
+# 	def get_queryset(self):
+# 		order=Order.objects.filter(customer=self.request.user)
+# 		return Item.objects.filter(order=order)
+
 class ProfileView(ListAPIView):
 	serializer_class = ProfileSerializer
 	def get_queryset(self):
@@ -34,7 +43,7 @@ class AddressCreateView(CreateAPIView):
 
 
 class OrderItems(APIView):
-	serializer_class = OrderSerializer
+	serializer_class = ItemSerializer
 
 	def post(self, request):
 
@@ -50,10 +59,34 @@ class OrderItems(APIView):
 				item.save()
 
 			new_product.stock=int(item.product.stock)-int(request.data['quantity'])
-			# item.save()
 			new_product.save()
 			new_order.total=(int(request.data['quantity'])*float(item.product.price))+float(new_order.total)
 			new_order.save()
-			return Response(self.serializer_class(new_order).data, status=HTTP_200_OK)
+			return Response(self.serializer_class(item).data, status=HTTP_200_OK)
 		else:
 			return Response(self.serializer_class().data, status=HTTP_400_BAD_REQUEST)
+
+# class OrderItems(APIView):
+# 	serializer_class = OrderSerializer
+#
+# 	def post(self, request):
+#
+# 		new_order, created = Order.objects.get_or_create(customer=self.request.user, is_paid=False)
+# 		new_product=Product.objects.get(id=request.data['product_id'])
+# 		item, added = Item.objects.get_or_create(product=new_product,order=new_order)
+# 		if item.product.stock>=int(request.data['quantity']):
+# 			if added:
+# 				item.quantity=request.data['quantity']
+# 				item.save()
+# 			else:
+# 				item.quantity=int(request.data['quantity'])+int(item.quantity)
+# 				item.save()
+#
+# 			new_product.stock=int(item.product.stock)-int(request.data['quantity'])
+# 			# item.save()
+# 			new_product.save()
+# 			new_order.total=(int(request.data['quantity'])*float(item.product.price))+float(new_order.total)
+# 			new_order.save()
+# 			return Response(self.serializer_class(new_order).data, status=HTTP_200_OK)
+# 		else:
+# 			return Response(self.serializer_class().data, status=HTTP_400_BAD_REQUEST)
