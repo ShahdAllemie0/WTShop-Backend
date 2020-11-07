@@ -14,10 +14,11 @@ urlpatterns = [
     path('orders/', views.OrderItems.as_view(), name='order-items'),
     path('address/', views.AddressCreateView.as_view(), name="address"),
     path('profile/', views.ProfileView.as_view(), name="address"),
-    path('cart/', views.CartView.as_view(), name="address"),
-    path('remove/', views.RemoveItems.as_view(), name="address"),
+    path('cart/', views.CartView.as_view(), name="cart"),
+    path('remove/item/', views.RemoveItems.as_view(), name="remove-item"),
+    path('history/', views.OrderHistory.as_view(), name="history"),
+    path('checkout/', views.Checkout.as_view(), name="checkout"),
 
-    # path('products/<int:product_id>/', views.ProductDetails.as_view(), name='product-detail'),
 ]
 if settings.DEBUG:
     urlpatterns+=static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -10,6 +10,10 @@ class ProductSerializer(serializers.ModelSerializer):
 		model = Product
 		fields = ['id', 'name', 'price', 'img','stock', 'description', 'date_added', 'category']
 
+class StockSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Product
+		fields = ['id', 'name','stock']
 
 class SignUpSerializer(serializers.ModelSerializer):
 	password = serializers.CharField(write_only=True)

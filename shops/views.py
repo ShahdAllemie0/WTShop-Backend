@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.generics import ListAPIView,CreateAPIView, RetrieveAPIView
 from .serializers import  (ProductSerializer,OrderSerializer,SignUpSerializer,AddressSerializer,ProfileSerializer,
-  ItemSerializer)
+  ItemSerializer,StockSerializer)
 from .models import Product,Order,Item,Address,Profile
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
@@ -27,11 +27,15 @@ class OrderHistory(ListAPIView):
 		return Order.objects.filter(customer=self.request.user, is_paid=True)
 
 
-class CartView(RetrieveAPIView):
+class CartView(APIView):
 	serializer_class = OrderSerializer
 	permission_classes = [IsAuthenticated]
-	def get_object(self):
-		return Order.objects.get(customer=self.request.user, is_paid=False)
+	def post(self, request):
+		try:
+			order= Order.objects.get(customer=self.request.user, is_paid=False)
+			return Response(self.serializer_class(order).data, status=HTTP_200_OK)
+		except:
+			return Response({}, status=HTTP_400_BAD_REQUEST)
 
 
 class ProfileView(ListAPIView):
@@ -42,36 +46,32 @@ class ProfileView(ListAPIView):
 
 class AddressCreateView(CreateAPIView):
 	serializer_class = AddressSerializer
-	permission_classes = [AllowAny]
-	# Permission needs to be set to IsAuthenticated
+	permission_classes = [IsAuthenticated]
 	# Need to use perform create to set user profile
 
 
 
 class OrderItems(APIView):
 	serializer_class = ItemSerializer
-	permission_classes = [AllowAny]
+	permission_classes = [IsAuthenticated]
 
 	def post(self, request):
-
 		new_order, created = Order.objects.get_or_create(customer=self.request.user, is_paid=False)
-		new_product=Product.objects.get(id=request.data['product_id'])
-		item, added = Item.objects.get_or_create(product=new_product,order=new_order)
-		if item.product.stock>=int(request.data['quantity']):
-			if added:
-				item.quantity=request.data['quantity']
-				item.save()
-			else:
-				item.quantity=int(request.data['quantity'])+int(item.quantity)
-				item.save()
+		item, added = Item.objects.get_or_create(product=Product.objects.get(id=request.data['product_id']),order=new_order)
+		item.save()
 
-			new_product.stock=int(item.product.stock)-int(request.data['quantity'])
-			new_product.save()
-			new_order.total=(int(request.data['quantity'])*float(item.product.price))+float(new_order.total)
-			new_order.save()
-			return Response(self.serializer_class(item).data, status=HTTP_200_OK)
+		if added:
+			item.quantity=request.data['quantity']
+			item.save()
 		else:
-			return Response(self.serializer_class().data, status=HTTP_400_BAD_REQUEST)
+			item.quantity=int(request.data['quantity'])+int(item.quantity)
+			item.save()
+
+		new_order.total=(int(request.data['quantity'])*float(item.product.price))+float(new_order.total)
+		new_order.save()
+		return Response(self.serializer_class(item).data, status=HTTP_200_OK)
+
+
 
 class RemoveItems(APIView):
 	serializer_class = ItemSerializer
@@ -84,10 +84,6 @@ class RemoveItems(APIView):
 				product_id=request.data['product_id'],
 				order=order
 			)
-			
-			product.stock += old_item.quantity
-			product.save()
-			
 			order.total -= (old_item.quantity*product.price)
 			order.save()
 
@@ -95,4 +91,24 @@ class RemoveItems(APIView):
 			return Response({}, status=HTTP_200_OK)
 		except:
 			return Response({}, status=HTTP_400_BAD_REQUEST)
-# c/gt4
+
+
+
+class Checkout(APIView):
+	serializer_class = StockSerializer
+	permission_classes = [IsAuthenticated]
+	def post(self, request):
+		order = Order.objects.get(customer=self.request.user, is_paid=False)
+		items=Item.objects.filter(order=order)
+
+		for item in items:
+				if item.product.stock>=item.quantity:
+					if item ==items.last():
+						order.is_paid=True
+						order.save()
+						for x in items:
+							x.product.stock-=x.quantity
+							x.product.save()
+						return Response({}, status=HTTP_200_OK)
+				else:
+					return Response(self.serializer_class(item.product).data, status=HTTP_400_BAD_REQUEST)
