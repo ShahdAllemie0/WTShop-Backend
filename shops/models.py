@@ -66,6 +66,10 @@ class Order(models.Model):
 	is_paid=models.BooleanField(default=False)
 	total = models.DecimalField(max_digits=6, decimal_places=2,blank=True,null=True,default=0)
 
+	def all_items_in_stock(self):
+		# 
+		pass
+
 
 
 class Item(models.Model):
