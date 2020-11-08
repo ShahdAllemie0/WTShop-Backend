@@ -30,7 +30,7 @@ class OrderHistory(ListAPIView):
 class CartView(APIView):
 	serializer_class = OrderSerializer
 	permission_classes = [IsAuthenticated]
-	def post(self, request):
+	def get(self, request):
 		try:
 			order= Order.objects.get(customer=self.request.user, is_paid=False)
 			return Response(self.serializer_class(order).data, status=HTTP_200_OK)
@@ -52,7 +52,7 @@ class AddressCreateView(CreateAPIView):
 
 
 class OrderItems(APIView):
-	serializer_class = ItemSerializer
+	serializer_class = OrderSerializer
 	permission_classes = [IsAuthenticated]
 
 	def post(self, request):
@@ -69,12 +69,11 @@ class OrderItems(APIView):
 
 		new_order.total=(int(request.data['quantity'])*float(item.product.price))+float(new_order.total)
 		new_order.save()
-		return Response(self.serializer_class(item).data, status=HTTP_200_OK)
-
+		return Response(self.serializer_class(new_order).data, status=HTTP_200_OK)
 
 
 class RemoveItems(APIView):
-	serializer_class = ItemSerializer
+	serializer_class = OrderSerializer
 
 	def post(self, request):
 		order = Order.objects.get(customer=self.request.user, is_paid=False)
@@ -88,7 +87,7 @@ class RemoveItems(APIView):
 			order.save()
 
 			old_item.delete()
-			return Response({}, status=HTTP_200_OK)
+			return Response(self.serializer_class(order).data, status=HTTP_200_OK)
 		except:
 			return Response({}, status=HTTP_400_BAD_REQUEST)
 
