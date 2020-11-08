@@ -1,7 +1,9 @@
 from django.shortcuts import render
 from rest_framework.generics import ListAPIView,CreateAPIView, RetrieveAPIView
-from .serializers import  (ProductSerializer,OrderSerializer,SignUpSerializer,AddressSerializer,ProfileSerializer,
-  ItemSerializer,StockSerializer)
+from .serializers import  (
+	ProductSerializer,OrderSerializer,SignUpSerializer,AddressSerializer,
+	ProfileSerializer, ItemSerializer,StockSerializer
+)
 from .models import Product,Order,Item,Address,Profile
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
@@ -23,25 +25,26 @@ class ProductListView(ListAPIView):
 class OrderHistory(ListAPIView):
 	serializer_class = OrderSerializer
 	permission_classes = [IsAuthenticated]
+	
 	def get_queryset(self):
-		return Order.objects.filter(customer=self.request.user, is_paid=True)
+		return self.request.user.orders.filter(is_paid=True)
 
 
 class CartView(APIView):
 	serializer_class = OrderSerializer
 	permission_classes = [IsAuthenticated]
 	def get(self, request):
-		try:
-			order= Order.objects.get(customer=self.request.user, is_paid=False)
-			return Response(self.serializer_class(order).data, status=HTTP_200_OK)
-		except:
-			return Response({}, status=HTTP_400_BAD_REQUEST)
+		order, _ = Order.objects.get_or_create(
+			customer=self.request.user, is_paid=False
+		)
+		return Response(self.serializer_class(order).data, status=HTTP_200_OK)
 
 
-class ProfileView(ListAPIView):
+class ProfileView(RetrieveAPIView):
 	serializer_class = ProfileSerializer
-	def get_queryset(self):
-		return Profile.objects.filter(user=self.request.user)
+	
+	def get_object(self):
+		return self.request.user.profile
 
 
 class AddressCreateView(CreateAPIView):
@@ -56,18 +59,17 @@ class OrderItems(APIView):
 	permission_classes = [IsAuthenticated]
 
 	def post(self, request):
-		new_order, created = Order.objects.get_or_create(customer=self.request.user, is_paid=False)
+		new_order, _ = Order.objects.get_or_create(customer=self.request.user, is_paid=False)
 		item, added = Item.objects.get_or_create(product=Product.objects.get(id=request.data['product_id']),order=new_order)
-		item.save()
 
 		if added:
 			item.quantity=request.data['quantity']
-			item.save()
 		else:
-			item.quantity=int(request.data['quantity'])+int(item.quantity)
-			item.save()
+			item.quantity += request.data['quantity']
+		item.save()
 
-		new_order.total=(int(request.data['quantity'])*float(item.product.price))+float(new_order.total)
+		new_total = (int(request.data['quantity'])*float(item.product.price))+float(new_order.total)
+		new_order.total = new_total
 		new_order.save()
 		return Response(self.serializer_class(new_order).data, status=HTTP_200_OK)
 
@@ -89,7 +91,7 @@ class RemoveItems(APIView):
 			old_item.delete()
 			return Response(self.serializer_class(order).data, status=HTTP_200_OK)
 		except:
-			return Response({}, status=HTTP_400_BAD_REQUEST)
+			return Response({"msg": "Something went wrong"}, status=HTTP_400_BAD_REQUEST)
 
 
 
@@ -98,16 +100,17 @@ class Checkout(APIView):
 	permission_classes = [IsAuthenticated]
 	def post(self, request):
 		order = Order.objects.get(customer=self.request.user, is_paid=False)
-		items=Item.objects.filter(order=order)
+		items = order.items.all()
 
-		for item in items:
-				if item.product.stock>=item.quantity:
-					if item ==items.last():
-						order.is_paid=True
-						order.save()
-						for x in items:
-							x.product.stock-=x.quantity
-							x.product.save()
-						return Response({}, status=HTTP_200_OK)
-				else:
-					return Response(self.serializer_class(item.product).data, status=HTTP_400_BAD_REQUEST)
+		if order.all_items_in_stock():
+			for item in items:
+				order.is_paid=True
+				order.save()
+				for x in items:
+					x.product.stock-=x.quantity
+					x.product.save()
+					return Response({}, status=HTTP_200_OK)
+		else:
+			return Response({
+				"msg": "Some items in your cart are out of stock"
+			}, status=HTTP_400_BAD_REQUEST)
