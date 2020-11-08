@@ -39,11 +39,17 @@ class AddressSerializer(serializers.ModelSerializer):
 	class Meta:
 		model= Address
 		fields = '__all__'
+class UserSerializer(serializers.ModelSerializer):
+	class Meta:
+		model= User
+		fields = ['username']
+
 
 class ProfileSerializer(serializers.ModelSerializer):
+	user=UserSerializer()
 	class Meta:
 		model= Profile
-		fields = '__all__'
+		fields = ['user','phone','gender','image']
 
 class ItemSerializer(serializers.ModelSerializer):
 	class Meta:

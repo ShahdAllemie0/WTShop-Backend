@@ -25,7 +25,7 @@ class ProductListView(ListAPIView):
 class OrderHistory(ListAPIView):
 	serializer_class = OrderSerializer
 	permission_classes = [IsAuthenticated]
-	
+
 	def get_queryset(self):
 		return self.request.user.orders.filter(is_paid=True)
 
@@ -42,7 +42,7 @@ class CartView(APIView):
 
 class ProfileView(RetrieveAPIView):
 	serializer_class = ProfileSerializer
-	
+
 	def get_object(self):
 		return self.request.user.profile
 
@@ -99,18 +99,23 @@ class Checkout(APIView):
 	serializer_class = StockSerializer
 	permission_classes = [IsAuthenticated]
 	def post(self, request):
-		order = Order.objects.get(customer=self.request.user, is_paid=False)
-		items = order.items.all()
+		try:
+			order = Order.objects.get(customer=self.request.user, is_paid=False)
+			items = order.items.all()
 
-		if order.all_items_in_stock():
-			for item in items:
-				order.is_paid=True
-				order.save()
-				for x in items:
-					x.product.stock-=x.quantity
-					x.product.save()
-					return Response({}, status=HTTP_200_OK)
-		else:
+			if order.all_items_in_stock():
+				for item in items:
+					order.is_paid=True
+					order.save()
+					for x in items:
+						x.product.stock-=x.quantity
+						x.product.save()
+						return Response({}, status=HTTP_200_OK)
+			else:
+				return Response({
+					"msg": "Some items in your cart are out of stock"
+				}, status=HTTP_400_BAD_REQUEST)
+		except:
 			return Response({
 				"msg": "Some items in your cart are out of stock"
 			}, status=HTTP_400_BAD_REQUEST)
