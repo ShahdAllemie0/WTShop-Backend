@@ -67,8 +67,11 @@ class Order(models.Model):
 	total = models.DecimalField(max_digits=6, decimal_places=2,blank=True,null=True,default=0)
 
 	def all_items_in_stock(self):
-		# 
-		pass
+		for item in self.items.all():
+			if item.product.stock<item.quantity:
+				return False
+		return True
+
 
 
 
