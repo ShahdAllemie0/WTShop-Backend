@@ -52,6 +52,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 		fields = ['user','phone','gender','image']
 
 class ItemSerializer(serializers.ModelSerializer):
+	product=ProductSerializer()
 	class Meta:
 		model = Item
 		fields = '__all__'
