@@ -42,7 +42,7 @@ class AddressSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
 	class Meta:
 		model= User
-		fields = ['username']
+		fields = ['username', 'first_name', 'last_name', 'email']
 
 
 class ProfileSerializer(serializers.ModelSerializer):

@@ -18,6 +18,7 @@ urlpatterns = [
     path('remove/item/', views.RemoveItems.as_view(), name="remove-item"),
     path('history/', views.OrderHistory.as_view(), name="history"),
     path('checkout/', views.Checkout.as_view(), name="checkout"),
+    path('profile/edit/', views.UpdateProfile.as_view(), name="edit-profile"),
 
 ]
 if settings.DEBUG:
