@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from rest_framework.generics import ListAPIView,CreateAPIView, RetrieveAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, RetrieveUpdateAPIView
 from .serializers import  (
 	ProductSerializer,OrderSerializer,SignUpSerializer,AddressSerializer,
 	ProfileSerializer, ItemSerializer,StockSerializer
@@ -119,3 +119,22 @@ class Checkout(APIView):
 			return Response({
 				"msg": "Some items in your cart are out of stock"
 			}, status=HTTP_400_BAD_REQUEST)
+
+class UpdateProfile(APIView):
+	serializer_class = ProfileSerializer
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		profile = Profile.objects.get(user=self.request.user)
+		try:
+			profile.user.username= request.data['username']
+			profile.user.first_name= request.data['first_name']
+			profile.user.last_name= request.data['last_name']
+			profile.user.email= request.data['email']
+			profile.phone= request.data['phone']
+			profile.user.save()
+
+			profile.save()
+			return Response(profile.user.username, status=HTTP_200_OK)
+		except:
+			return Response({"msg": "Something went wrong"}, status=HTTP_400_BAD_REQUEST)
